@@ -125,8 +125,16 @@ public class JavaDockerCodeSandbox implements CodeSandbox {
 
         String containerId = createContainerResponse.getId();
 
-//        dockerClient.startContainerCmd(containerId).exec();
         // 启动容器
+        dockerClient.startContainerCmd(containerId).exec();
+
+        ExecuteMessage executeMessage = new ExecuteMessage();
+
+        List<ExecuteMessage> runMessageList = new ArrayList<>();
+
+        final String[] message = {null};
+        final String[] errorMessage = {null};
+
         for (String inputArgs : inputList) {
             String[] inputArgsArray = inputArgs.split(" ");
             String[] cmdArray = ArrayUtil.append(new String[]{"java", "-cp", "/app", "Main"}, inputArgsArray);
@@ -146,8 +154,10 @@ public class JavaDockerCodeSandbox implements CodeSandbox {
                     StreamType streamType = frame.getStreamType();
                     if (StreamType.STDERR.equals(streamType)) {
                         System.out.println("错误输出：" + new String(frame.getPayload()));
+                        errorMessage[0] = new String(frame.getPayload());
                     } else if (StreamType.STDOUT.equals(streamType)) {
                         System.out.println("标准输出：" + new String(frame.getPayload()));
+                        message[0] = new String(frame.getPayload());
                     }
                     super.onNext(frame);
                 }
@@ -160,10 +170,61 @@ public class JavaDockerCodeSandbox implements CodeSandbox {
                 throw new RuntimeException(e);
             }
 
+            executeMessage.setMessage(message[0]);
+            executeMessage.setErrorMessage(errorMessage[0]);
+
+            runMessageList.add(executeMessage);
         }
 
 
         ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+
+        // 整理输出结果
+        List<String> outputList = new ArrayList<>();
+
+        long maxTime = 0;
+
+        for (ExecuteMessage executeMessage1 : runMessageList) {
+
+            Long executeTime = executeMessage.getExecuteTime();
+
+            if (executeTime > maxTime) {
+                maxTime = executeTime;
+            }
+
+            String errorMessage1 = executeMessage.getErrorMessage();
+            if (StrUtil.isNotBlank(errorMessage1)) {
+                // 假如执行过程中有报错信息 3 ---> 执行过程中有报错信息
+                executeCodeResponse.setStatus(ExecuteCodeStatusEnum.RunError.getStatus());
+                executeCodeResponse.setMessage(errorMessage1);
+                break;
+            }
+            String message1 = executeMessage.getMessage();
+            outputList.add(message1);
+        }
+
+        if (outputList.size() == inputList.size()) {
+            // 1----> 运行成功
+            executeCodeResponse.setStatus(ExecuteCodeStatusEnum.RunSuccess.getStatus());
+        }
+        executeCodeResponse.setOutputList(outputList);
+
+        JudgeInfo judgeInfo = new JudgeInfo();
+//        judgeInfo.setMessage();
+//        judgeInfo.setMemory();
+        // 选用最大运行时间
+        judgeInfo.setTime(maxTime);
+
+        executeCodeResponse.setJudgeInfo(judgeInfo);
+
+        // 删除文件
+        if (userCodeParentPath != null) {
+            boolean del = FileUtil.del(userCodeParentPath);
+            System.out.println("删除" + (del ? "成功" : "失败"));
+        }
+
+        // 异常处理，提高程序的健壮性
+
 
         return executeCodeResponse;
     }
