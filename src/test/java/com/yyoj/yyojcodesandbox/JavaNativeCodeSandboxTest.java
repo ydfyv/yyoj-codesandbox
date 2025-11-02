@@ -20,7 +20,7 @@ class JavaNativeCodeSandboxTest {
         executeCodeRequest.setCode(code);
         executeCodeRequest.setInput(Arrays.asList("1 2", "3 4"));
 
-        JavaNativeCodeSandbox javaNativeCodeSandbox = new JavaNativeCodeSandbox();
+        JavaNativeCodeSandboxOld javaNativeCodeSandbox = new JavaNativeCodeSandboxOld();
 
         ExecuteCodeResponse executeCodeResponse = javaNativeCodeSandbox.executeCode(executeCodeRequest);
 
