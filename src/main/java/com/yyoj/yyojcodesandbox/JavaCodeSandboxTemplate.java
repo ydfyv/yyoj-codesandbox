@@ -25,7 +25,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
     private static final long TIMEOUT = 10000L;
 
     // 用户代码文件父路径
-    public String userCodeParentPath = null;
+//    public String userCodeParentPath = null;
 
 
     /**
@@ -42,7 +42,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
         }
 
         // 将用户代码隔离存放
-        userCodeParentPath = globalCodePath + File.separator + UUID.randomUUID();
+        String userCodeParentPath = globalCodePath + File.separator + UUID.randomUUID();
 
         String userCodePath = userCodeParentPath + File.separator + GLOBAL_JAVA_CLASS_NAME;
 
@@ -87,7 +87,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
      * @return 运行结果
      */
 
-    public List<ExecuteMessage> runFile(List<String> inputList) {
+    public List<ExecuteMessage> runFile(List<String> inputList, File file) {
 
         List<ExecuteMessage> runMessageList = new ArrayList<>();
 
@@ -96,7 +96,11 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
             // 手动限制Java最大堆内存
 //            String runCommand = String.format("java -Xmx256m -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
 
+            String userCodeParentPath = file.getParent();
+
             String runCommand = String.format("java -Xmx256m -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
+
+            System.out.println("run file cmd: " + runCommand);
 
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCommand);
@@ -111,7 +115,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
                     }
                 }).start();
 
-                ExecuteMessage runMessage = ProcessUtils.executeAndGetMessage(runProcess, "运行");
+                ExecuteMessage runMessage = ProcessUtils.executeInteractAndGetMessage(runProcess, inputArgs);
 
                 runMessageList.add(runMessage);
 //                ExecuteMessage runMessage = ProcessUtils.executeInteractAndGetMessage(runProcess, inputArgs);
@@ -178,10 +182,10 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
      * 5.删除用户代码文件
      * @return 是否删除成功
      */
-    public boolean delUserCodeFile() {
+    public boolean delUserCodeFile(File file) {
         // 删除文件
-        if (userCodeParentPath != null) {
-            boolean del = FileUtil.del(userCodeParentPath);
+        if (file != null) {
+            boolean del = FileUtil.del(file);
             System.out.println("删除" + (del ? "成功" : "失败"));
             return del;
         }
@@ -223,19 +227,21 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
         System.out.println("编译结果" + compileMessage);
 
         // 运行用户代码
-        List<ExecuteMessage> runMessageList = runFile(inputList);
+        List<ExecuteMessage> runMessageList = runFile(inputList, userCodeFile);
 
         // 整理输出结果
         ExecuteCodeResponse executeCodeResponse = getOutResponse(runMessageList);
 
         //删除用户代码文件
-        boolean del = delUserCodeFile();
+        boolean del = delUserCodeFile(userCodeFile);
 
         if (del) {
             System.out.println("删除成功");
         } else {
             System.out.println("删除失败");
         }
+
+        System.out.println("响应内容： " + executeCodeResponse);
 
         return executeCodeResponse;
     }

@@ -87,7 +87,10 @@ public class ProcessUtils {
         OutputStream outputStream = null;
         BufferedReader bufferedReader = null;
 
+        StopWatch stopWatch = new StopWatch();
+
         try {
+            stopWatch.start();
 
             outputStream = process.getOutputStream();
 
@@ -114,6 +117,8 @@ public class ProcessUtils {
                 outputStream.close();
                 bufferedReader.close();
                 process.destroy();
+                stopWatch.stop();
+                executeMessage.setExecuteTime(stopWatch.getLastTaskTimeMillis());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

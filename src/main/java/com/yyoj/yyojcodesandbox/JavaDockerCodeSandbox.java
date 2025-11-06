@@ -9,6 +9,7 @@ import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.yyoj.yyojcodesandbox.model.ExecuteMessage;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
      * @return
      */
     @Override
-    public List<ExecuteMessage> runFile(List<String> inputList) {
+    public List<ExecuteMessage> runFile(List<String> inputList, File file) {
         // 获取默认的docker
         DockerClient dockerClient = DockerClientBuilder.getInstance().build();
 
@@ -50,6 +51,7 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate {
 
             System.out.println("镜像下载完成！");
         }
+        String userCodeParentPath = file.getParent();
 
         // 创建容器
         CreateContainerCmd containerCmd = dockerClient.createContainerCmd(image);
