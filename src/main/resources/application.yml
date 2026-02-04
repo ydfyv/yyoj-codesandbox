@@ -1,3 +1,22 @@
 server:
   port: 8090
 
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG  # Replace with your package name
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet: DEBUG
+  file:
+    name: logs/application.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      file-name-pattern: logs/application.%d{yyyy-MM-dd}.%i.log
+
+# Request logging configuration
+logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
