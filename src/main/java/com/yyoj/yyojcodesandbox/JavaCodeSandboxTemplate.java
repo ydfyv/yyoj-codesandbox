@@ -164,6 +164,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
         if (outputList.size() == runMessageList.size()) {
             // 1----> 运行成功
             executeCodeResponse.setStatus(ExecuteCodeStatusEnum.RunSuccess.getStatus());
+            executeCodeResponse.setMessage(ExecuteCodeStatusEnum.RunSuccess.getDescription());
         }
         executeCodeResponse.setOutputList(outputList);
 
